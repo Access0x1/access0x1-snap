@@ -24,7 +24,11 @@ export type NameLookupDeps = {
   resolve: Omit<ResolveDeps, 'routerAddress' | 'provider'>;
 };
 
-/** The numeric chain id of a CAIP-2 `eip155:` id, or null. */
+/**
+ * The numeric chain id of a CAIP-2 `eip155:` id, or null.
+ * @param caip2 - A CAIP-2 chain id such as `eip155:8453`.
+ * @returns The chain id as a number, or null.
+ */
 export function numericChain(caip2: string): number | null {
   const match = /^eip155:(\d{1,10})$/u.exec(caip2);
   return match ? Number(match[1]) : null;
@@ -54,7 +58,7 @@ export async function lookupAddress(caip2: string, address: string, deps: NameLo
   } catch {
     return [];
   }
-  const target = address as `0x${string}`;
+  const target = address;
   const results: NameResult[] = [];
   for (const id of await candidateMerchantIds(deps.provider, router, target)) {
     const nameHash = await activeMerchantNameHash(deps.provider, router, id, target);

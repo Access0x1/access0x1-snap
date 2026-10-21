@@ -58,9 +58,9 @@ describe('onHomePage', () => {
     const text = JSON.stringify(content);
     for (const name of ['Ethereum', 'Base', 'Unichain', 'Arc']) expect(text).toContain(name);
     expect(text).toContain('How fees work');
-    expect(text).toContain("merchant's own fee rule");
-    expect(text).toContain('app group');
-    expect(text).toContain('paid in the same transaction');
+    expect(text).toContain("business's own fee rule");
+    expect(text).toContain('rule for its app');
+    expect(text).toContain('paid straight away, in the same transaction');
   });
 
   it('shows how many merchants are watched', async () => {

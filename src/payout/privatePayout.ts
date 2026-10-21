@@ -7,17 +7,18 @@
  * touches the router contract. The Snap holds NO keys and NO funds.
  *
  * Doctrine:
- *  - #1 zero custody: the destination EOA is derived deterministically from
- *    MetaMask's own BIP-44 entropy; the seed never leaves the wallet.
- *  - #4 truth in copy: callers surface the verbatim privacy guardrail line, never
- *    "anonymous" / "untraceable".
- *  - #5 never swallow a failure: a failed withdraw returns `recoverable: true`
- *    so the user knows their USDC is safe in the Unlink private balance.
- *  - No private key or API token ever appears in a returned error.
+ * - #1 zero custody: the destination EOA is derived deterministically from
+ * MetaMask's own BIP-44 entropy; the seed never leaves the wallet.
+ * - #4 truth in copy: callers surface the verbatim privacy guardrail line, never
+ * "anonymous" / "untraceable".
+ * - #5 never swallow a failure: a failed withdraw returns `recoverable: true`
+ * so the user knows their USDC is safe in the Unlink private balance.
+ * - No private key or API token ever appears in a returned error.
  */
 
 import { SnapError } from '@metamask/snaps-sdk';
 
+import { JSON_CONTENT_TYPE } from '../constants';
 import { explorerTxBase } from '../router/chains';
 import type { PayoutResult } from '../types';
 
@@ -56,7 +57,6 @@ export type FetchLike = (
 /**
  * The day index used for the fresh daily EOA — days since the Unix epoch in UTC.
  * A new index every UTC day means the destination address is never reused.
- *
  * @param now - Current time in ms (defaults to `Date.now()`); injectable for tests.
  * @returns The integer day index.
  */
@@ -96,15 +96,12 @@ export type PrivatePayoutDeps = {
  * Initiate a private payout via the checkout API.
  *
  * Flow: derive a fresh daily EOA → `POST /api/payout` → return both tx hashes
- * with explorer links. Failures map to the spec's error codes; a failed
+ * with explorer links. No thrown error ever includes a private key or API token. Failures map to the spec's error codes; a failed
  * withdraw carries `recoverable: true` so the user knows funds are safe.
- *
  * @param params - The payout request.
  * @param deps - Injected dependencies (API base, deriver, fetch, clock).
  * @returns A {@link PayoutResult} with both tx hashes and explorer links.
- * @throws {SnapError} `-32001` budget_exceeded, `-32002` shield_failed,
- *   `-32003` withdraw_failed (with `data.recoverable === true`).
- * @warn Never includes a private key or API token in any thrown error.
+ * @throws {SnapError} `-32001` budget_exceeded, `-32002` shield_failed, or `-32003` withdraw_failed (with `data.recoverable === true`).
  */
 export async function initiatePrivatePayout(
   params: InitiatePrivatePayoutParams,
@@ -126,7 +123,7 @@ export async function initiatePrivatePayout(
   try {
     const res = await deps.fetchImpl(`${deps.apiBaseUrl}/api/payout`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': JSON_CONTENT_TYPE },
       body: JSON.stringify({ amountUsd, depositAmountUsd, destination, userId }),
     });
     body = (await res.json()) as ApiPayoutResponse;
@@ -173,7 +170,6 @@ export async function initiatePrivatePayout(
 /**
  * Derive the destination address, converting any deriver failure into a
  * `shield_failed` error WITHOUT leaking the underlying key material or message.
- *
  * @param deriveAddress - The injected deriver.
  * @param index - The daily address index.
  * @returns The derived address.

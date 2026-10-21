@@ -7,6 +7,8 @@ import { decodeFunctionResult, encodeFunctionData, parseAbi } from 'viem/utils';
 
 import { sanitizeText } from '../branding/sanitize';
 import type { EthProvider } from '../router/merchant';
+import type { PaymentSummary } from '../types';
+import type { TokenSymbols } from '../ui/insightPanel';
 import type { TokenMeta } from '../ui/permit2Panel';
 
 const ERC20_ABI = parseAbi(['function symbol() view returns (string)', 'function decimals() view returns (uint8)']);
@@ -33,4 +35,22 @@ export async function fetchTokenMeta(token: `0x${string}`, chainId: number, prov
   } catch {
     return null;
   }
+}
+
+/**
+ * Read the symbols of the tokens in a payment, for the insight panel. Best effort: a symbol that cannot be read is
+ * simply left out and the panel shows the address alone.
+ * @param summary - The decoded payment.
+ * @param provider - The wallet's EIP-1193 provider.
+ * @returns The symbols that could be read.
+ */
+export async function fetchPaymentSymbols(summary: PaymentSummary, provider: EthProvider): Promise<TokenSymbols> {
+  const [payWith, settlement] = await Promise.all([
+    summary.swap?.payWith ? fetchTokenMeta(summary.swap.payWith, summary.chainId, provider) : null,
+    summary.token ? fetchTokenMeta(summary.token, summary.chainId, provider) : null,
+  ]);
+  return {
+    ...(payWith ? { payWith: payWith.symbol } : {}),
+    ...(settlement ? { settlement: settlement.symbol } : {}),
+  };
 }

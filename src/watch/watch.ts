@@ -46,7 +46,11 @@ export function parseWatchParams(params: unknown): { merchantId: bigint; chainId
   return { merchantId: BigInt(idText), chainId: rawChain };
 }
 
-/** The chain the wallet is on, or null if it cannot be read. */
+/**
+ * The chain the wallet is on, or null if it cannot be read.
+ * @param provider - EIP-1193 provider.
+ * @returns The chain id, or null.
+ */
 export async function activeChainId(provider: EthProvider): Promise<number | null> {
   try {
     const value = Number((await provider.request({ method: 'eth_chainId' })) as string);
@@ -56,7 +60,11 @@ export async function activeChainId(provider: EthProvider): Promise<number | nul
   }
 }
 
-/** The current block number of the wallet's network. */
+/**
+ * The current block number of the wallet's network.
+ * @param provider - EIP-1193 provider.
+ * @returns The block number.
+ */
 export async function currentBlock(provider: EthProvider): Promise<bigint> {
   return BigInt((await provider.request({ method: 'eth_blockNumber' })) as string);
 }
@@ -106,6 +114,11 @@ export function paymentMessage(log: RawLog, watch: Watch): string | null {
   }
 }
 
+/**
+ * Send an in-app notification.
+ * @param snap - The Snap runtime provider.
+ * @param message - The text to show.
+ */
 async function notify(snap: SnapProvider, message: string): Promise<void> {
   await snap.request({ method: 'snap_notify', params: { type: 'inApp', message } });
 }

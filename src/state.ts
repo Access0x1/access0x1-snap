@@ -25,7 +25,6 @@ export type SnapProvider = {
 
 /**
  * Read the persisted Snap state.
- *
  * @param snap - The Snap runtime provider.
  * @returns The stored config, or `null` if the Snap is not yet configured.
  */
@@ -41,7 +40,6 @@ export async function getState(
 
 /**
  * Persist the Snap state.
- *
  * @param snap - The Snap runtime provider.
  * @param state - The full config state to store.
  */
@@ -58,7 +56,6 @@ export async function setState(
 /**
  * Serialize a `PaymentSummary` (stringify its `bigint` fields) for JSON storage
  * and the `wallet_invokeSnap` return boundary.
- *
  * @param summary - The in-memory summary.
  * @returns A JSON-safe summary.
  */
@@ -76,7 +73,6 @@ export function serializeSummary(
 /**
  * Append a receipt to the persisted log (most-recent-first), capped at
  * {@link MAX_RECEIPTS}. Requires the Snap to already be configured.
- *
  * @param snap - The Snap runtime provider.
  * @param summary - The payment summary to record.
  */

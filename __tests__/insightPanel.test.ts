@@ -6,6 +6,7 @@ import {
   tokenLabel,
   truncateAddress,
 } from '../src/ui/insightPanel';
+import { collectElements } from './helpers';
 import type { MerchantInfo, PaymentSummary } from '../src/types';
 
 const MERCHANT: MerchantInfo = {
@@ -96,7 +97,7 @@ describe('renderInsightPanel', () => {
     expect(text).toContain('acme.access0x1.eth');
     expect(text).toContain('Arc Testnet');
     expect(text).toContain('order-1');
-    expect(text).toContain('Native');
+    expect(text).toContain('Native coin');
   });
 
   it('shows the fee split using platformFeeBps + merchant feeBps (the true total)', () => {
@@ -116,9 +117,11 @@ describe('renderInsightPanel', () => {
   });
 
   it('shows the truncated token address for payToken', () => {
-    const text = collectText(renderInsightPanel(TOKEN_SUMMARY, MERCHANT));
-    expect(text).toContain('0x1111…1111');
-    expect(text).toContain('Base Sepolia');
+    // The token is shown with the Address component (the wallet truncates it), not as hand-made text.
+    const panel = renderInsightPanel(TOKEN_SUMMARY, MERCHANT);
+    const token = collectElements(panel, 'Address').find((el) => el.props.address === TOKEN_SUMMARY.token);
+    expect(token?.props.truncate).toBe(true);
+    expect(collectText(panel)).toContain('Base Sepolia');
   });
 
   it('never includes the words "anonymous" or "untraceable" (law #4)', () => {

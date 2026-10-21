@@ -17,6 +17,13 @@ const MAX_SCAN = 500;
 
 type Log = { topics: string[]; data: string };
 
+/**
+ * Read event logs from the router.
+ * @param provider - EIP-1193 provider.
+ * @param router - The router address.
+ * @param topics - The topic filter.
+ * @returns The matching logs.
+ */
 async function getLogs(provider: EthProvider, router: `0x${string}`, topics: (string | null)[]): Promise<Log[]> {
   const logs = (await provider.request({
     method: 'eth_getLogs',

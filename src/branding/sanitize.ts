@@ -45,7 +45,6 @@ const UNSAFE_SVG_PATTERNS: RegExp[] = [
 /**
  * Collapse whitespace and trim an unstructured text string, then hard-cap its length.
  * Control characters are stripped so nothing odd reaches the wallet UI.
- *
  * @param value - The untrusted string (or any value).
  * @param maxLen - The maximum length to keep.
  * @returns A clean, length-capped string (empty string if not a usable string).
@@ -57,7 +56,7 @@ export function sanitizeText(value: unknown, maxLen: number): string {
   // Strip control characters (codepoints < 0x20 and DEL 0x7f), then collapse
   // runs of whitespace to a single space. Built without embedding literal
   // control bytes in source: the range is expressed via \u escapes.
-  // eslint-disable-next-line no-control-regex
+   
   const controlChars = /[\u0000-\u001f\u007f]/gu;
   const cleaned = value
     .replace(controlChars, ' ')
@@ -69,7 +68,6 @@ export function sanitizeText(value: unknown, maxLen: number): string {
 /**
  * Validate a hex brand color (`#rgb`, `#rrggbb`, or `#rrggbbaa`). Anything else
  * — including a `rgb()` string that could smuggle CSS — falls back to the default.
- *
  * @param value - The untrusted color value.
  * @returns A safe `#`-prefixed hex string, or {@link DEFAULT_BRAND_COLOR}.
  */
@@ -91,7 +89,6 @@ export function sanitizeBrandColor(value: unknown): string {
  * NOTE: ADR D5 — `Image` accepts inline SVG strings ONLY (never `https://` URLs).
  * Raster logos are converted upstream (on upload) into an SVG `<image>` data-URI,
  * so a valid logo here is always already an `<svg>` wrapper.
- *
  * @param value - The untrusted logo string.
  * @returns The sanitized inline-SVG string, or `null` if unusable/unsafe.
  */

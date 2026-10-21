@@ -8,10 +8,10 @@
  * `keccak256` against the deployed ABI — NEVER transcribed from memory.
  *
  * To regenerate after any signature change, run from the repo root:
- *   cast sig "payNative(uint256,uint256,bytes32)"
- *   cast sig "payToken(uint256,address,uint256,bytes32)"
- *   cast keccak "PaymentReceived(uint256,address,address,uint256,uint256,uint256,uint256,bytes32,uint64)"
- *   cast sig "merchants(uint256)"
+ * cast sig "payNative(uint256,uint256,bytes32)"
+ * cast sig "payToken(uint256,address,uint256,bytes32)"
+ * cast keccak "PaymentReceived(uint256,address,address,uint256,uint256,uint256,uint256,bytes32,uint64)"
+ * cast sig "merchants(uint256)"
  */
 
 import { parseAbi, toFunctionSelector } from 'viem/utils';
@@ -64,24 +64,24 @@ export const PLATFORM_FEE_ABI = parseAbi([
  * 4-byte selector of `payNative(uint256,uint256,bytes32)`.
  * Checked with `cast sig` against the router source.
  */
-export const PAY_NATIVE_SELECTOR = '0x8589fa0f' as const;
+export const PAY_NATIVE_SELECTOR = '0x8589fa0f';
 
 /**
  * 4-byte selector of `payToken(uint256,address,uint256,bytes32)`.
  * Checked with `cast sig` against the router source.
  */
-export const PAY_TOKEN_SELECTOR = '0x004bef62' as const;
+export const PAY_TOKEN_SELECTOR = '0x004bef62';
 
 /**
  * `keccak256` topic0 of the `PaymentReceived` event.
  *
  * Signature:
- *   PaymentReceived(uint256,address,address,uint256,uint256,uint256,uint256,bytes32,uint64)
+ * PaymentReceived(uint256,address,address,uint256,uint256,uint256,uint256,bytes32,uint64)
  *
  * Checked with `cast keccak "PaymentReceived(uint256,address,address,uint256,uint256,uint256,uint256,bytes32,uint64)"`.
  */
 export const PAYMENT_RECEIVED_TOPIC0 =
-  '0x0e7e4f9badfadd9437d5fe53bdba0ca985b1b3414cb35b09a4459416e1735eea' as const;
+  '0x0e7e4f9badfadd9437d5fe53bdba0ca985b1b3414cb35b09a4459416e1735eea';
 
 /**
  * The `PaymentReceived` event fragment, used to decode receipt logs.

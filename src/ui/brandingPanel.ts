@@ -7,69 +7,68 @@
  *
  * Branding is DISPLAY-ONLY (doctrine #1): this header never gates, signs, or
  * blocks a payment or refund. If a merchant has no logo, we simply omit the
- * `Image` — the surface still renders cleanly. We use `info`/`success` `Banner`s
- * only (never the Flask-only `critical` modal, ADR D5).
+ * `Image` — the surface still renders cleanly. The verified badge is an icon and
+ * text, never the Flask-only `critical` modal (ADR D5).
  *
- * Law #4 (truth in copy): the "Verified on-chain" banner appears ONLY when the
+ * Law #4 (truth in copy): the verified badge appears ONLY when the
  * caller resolved `verified === true` (i.e. `keccak256(name) === nameHash`); we
  * never imply a chain guarantee we don't have.
  */
 
-import {
-  Banner,
-  Box,
-  Divider,
-  Heading,
-  Image,
-  Row,
-  Text,
-} from '@metamask/snaps-sdk/jsx';
+import { Box, Divider, Heading, Icon, Image, Row } from '@metamask/snaps-sdk/jsx';
 import type { GenericSnapElement, JSXElement } from '@metamask/snaps-sdk/jsx';
 
+import { SnapText } from './kit';
 import type { MerchantBranding } from '../types';
 
-/** Verbatim copy for the on-chain verification banner (truthful, never stronger). */
-export const VERIFIED_COPY =
-  'This business name matches its on-chain registration.';
+/** Plain words for the line under the verified badge (truthful, never stronger). */
+export const VERIFIED_COPY = 'This name matches the one the business registered.';
+
+/** The badge text next to the check icon. */
+export const VERIFIED_BADGE = 'Verified business';
 
 /**
- * Build the children of the branded header from resolved branding. Returned as a
- * flat array so {@link renderBrandingHeader} (and the composed insight panel) can
- * spread it. Conditional pieces (logo, description, verified banner) are simply
- * omitted when absent.
- *
+ * The verified badge: a check icon and two short lines. Only built for a name that matched its registration.
+ * @returns The badge elements, in render order.
+ */
+export function verifiedBadge(): GenericSnapElement[] {
+  return [
+    Box({
+      direction: 'horizontal',
+      crossAlignment: 'center',
+      children: [
+        Icon({ name: 'verified-filled', color: 'success', size: 'md' }),
+        SnapText({ children: VERIFIED_BADGE, color: 'success', fontWeight: 'bold' }),
+      ],
+    }),
+    SnapText({ children: VERIFIED_COPY, color: 'muted', size: 'sm' }),
+  ];
+}
+
+/**
+ * Build the children of the branded header from resolved branding: logo, "Pay {name}", the verified badge when the
+ * name matched, then the one-line description. Returned as a flat array so the composed insight panel can spread it.
+ * Pieces that are absent are simply left out.
  * @param branding - The resolved, already-sanitized branding.
  * @returns The header's child elements, in render order.
  */
-export function brandingHeaderChildren(
-  branding: MerchantBranding,
-): GenericSnapElement[] {
+export function brandingHeaderChildren(branding: MerchantBranding): GenericSnapElement[] {
   const children: GenericSnapElement[] = [];
 
-  // Logo — inline SVG only (ADR D5). Omitted entirely when there is none.
+  // Logo: inline SVG only (ADR D5). Omitted entirely when there is none.
   if (branding.logoSvg) {
-    children.push(
-      Image({ src: branding.logoSvg, alt: `${branding.name} logo` }),
-    );
+    children.push(Image({ src: branding.logoSvg, alt: `${branding.name} logo` }));
   }
 
-  // "Pay {Business Name}" — the headline the customer reads.
   children.push(Heading({ children: `Pay ${branding.name}` }));
 
-  // One-line description, when present.
-  if (branding.description.length > 0) {
-    children.push(Text({ children: branding.description }));
+  // The badge shows only when the hash actually matched (law #4).
+  if (branding.verified) {
+    children.push(...verifiedBadge());
   }
 
-  // Truthful on-chain verification badge — only when the hash actually matched.
-  if (branding.verified) {
-    children.push(
-      Banner({
-        title: 'Verified on-chain',
-        severity: 'success',
-        children: Text({ children: VERIFIED_COPY }),
-      }),
-    );
+  if (branding.description.length > 0) {
+    children.push(SnapText({ children: branding.description }));
   }
 
   return children;
@@ -77,7 +76,6 @@ export function brandingHeaderChildren(
 
 /**
  * Render the branded header as a standalone `Box` (used by the pre-sign dialog).
- *
  * @param branding - The resolved branding.
  * @returns A Snap JSX element.
  */
@@ -93,7 +91,6 @@ export function renderBrandingHeader(branding: MerchantBranding): JSXElement {
  * This is DISPLAY + CONSENT only: the dApp sends the actual pay tx (the Snap
  * cannot call `eth_sendTransaction`, ADR D5). Rejecting here is a UX courtesy,
  * never the enforcement point for a money path.
- *
  * @param branding - The resolved branding.
  * @param amountLabel - A pre-formatted amount string (e.g. `"$29.00"` or `"12.50 USDC"`).
  * @returns A Snap JSX element for `snap_dialog`'s `content`.
@@ -106,7 +103,7 @@ export function renderBrandedConfirmation(
     children: [
       ...brandingHeaderChildren(branding),
       Divider({}),
-      Row({ label: 'Amount', children: Text({ children: amountLabel }) }),
+      Row({ label: 'Amount', children: SnapText({ children: amountLabel }) }),
     ],
   });
 }

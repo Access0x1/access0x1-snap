@@ -2,10 +2,10 @@
  * Access0x1 MetaMask Snap — entry point.
  *
  * Exports the two Snap lifecycle handlers:
- *  - `onTransaction`: renders the readable payment insight panel before signing.
- *  - `onRpcRequest`: a small dispatch table for dapp-invoked methods
- *    (`configure`, `setMerchantBranding`, `getRouterConfig`, `getPaymentHistory`,
- *    `getLastPaymentReceipt`).
+ * - `onTransaction`: renders the readable payment insight panel before signing.
+ * - `onRpcRequest`: a small dispatch table for dapp-invoked methods
+ * (`configure`, `setMerchantBranding`, `getRouterConfig`, `getPaymentHistory`,
+ * `getLastPaymentReceipt`).
  *
  * The Snap holds NO keys and NO funds (doctrine #1). The router address is never
  * hardcoded — it is set by the dapp's `configure` call and persisted in encrypted
@@ -51,7 +51,7 @@ import {
   type SnapProvider,
 } from './state';
 import { parsePermit2Signature } from './signature/permit2';
-import { fetchTokenMeta } from './signature/tokenMeta';
+import { fetchPaymentSymbols, fetchTokenMeta } from './signature/tokenMeta';
 import { renderBrandedConfirmation } from './ui/brandingPanel';
 import { renderHomePage } from './ui/homePanel';
 import { isUnlimited, renderPermit2Panel } from './ui/permit2Panel';
@@ -74,7 +74,6 @@ type EthRequest = {
 
 /**
  * Parse a CAIP-2 chain id (`"eip155:5042002"`) into a numeric EVM chain id.
- *
  * @param caip2 - The CAIP-2 chain id string from `onTransaction`.
  * @returns The numeric chain id, or `0` if it cannot be parsed.
  */
@@ -93,7 +92,6 @@ function caip2ToNumericChainId(caip2: string): number {
  * branding resolution degrade gracefully and NEVER throw — branding is
  * display-only (doctrine #1), so a failed resolution simply renders the plain
  * (pre-existing) insight panel; it can never block the signing surface.
- *
  * @param args - The MetaMask `onTransaction` payload.
  * @param args.transaction - The pending transaction (only `data` is decoded).
  * @param args.chainId - The CAIP-2 chain id.
@@ -146,23 +144,24 @@ export const onTransaction: OnTransactionHandler = async ({
     branding = undefined;
   }
 
-  return { content: renderInsightPanel(summary, merchant, branding) };
+  const symbols = await fetchPaymentSymbols(summary, ethereum as unknown as EthProvider);
+
+  return { content: renderInsightPanel(summary, merchant, branding, symbols) };
 };
 
 /**
  * `onRpcRequest` — dapp-invoked method dispatch table.
  *
  * Methods:
- *  - `configure({ routerAddress, chainIds, brandingApiBaseUrl? })` → persists config.
- *  - `getRouterConfig()` → `{ routerAddress, chainIds }`.
- *  - `getPaymentHistory({ limit })` → recent serialized receipts (max 50).
- *  - `getLastPaymentReceipt()` → the most-recent serialized receipt, or `null`.
- *  - `watchMerchant({ merchantId, chainId })` / `unwatchMerchant(...)` / `getWatches()` → opt in to
- *    (after the user confirms) or out of, or list, payment notifications for a merchant id.
- *  - `setMerchantBranding({ merchantId, name, description, logoSvg, brandColor, confirm?, amountLabel? })`
- *    → caches sanitized white-label branding (ADR unit 6); optionally shows a
- *    branded pre-sign confirmation dialog. Display-only — never gates a money path.
- *
+ * - `configure({ routerAddress, chainIds, brandingApiBaseUrl? })` → persists config.
+ * - `getRouterConfig()` → `{ routerAddress, chainIds }`.
+ * - `getPaymentHistory({ limit })` → recent serialized receipts (max 50).
+ * - `getLastPaymentReceipt()` → the most-recent serialized receipt, or `null`.
+ * - `watchMerchant({ merchantId, chainId })` / `unwatchMerchant(...)` / `getWatches()` → opt in to
+ * (after the user confirms) or out of, or list, payment notifications for a merchant id.
+ * - `setMerchantBranding({ merchantId, name, description, logoSvg, brandColor, confirm?, amountLabel? })`
+ * → caches sanitized white-label branding (ADR unit 6); optionally shows a
+ * branded pre-sign confirmation dialog. Display-only — never gates a money path.
  * @param args - The RPC payload.
  * @param args.request - The JSON-RPC request (`method` + `params`).
  * @returns The method's JSON result.
@@ -254,7 +253,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
 /**
  * Parse a merchant id from RPC params into a non-negative `bigint`, or `null` if
  * it is missing / malformed. Accepts a number or a decimal/hex string.
- *
  * @param value - The untrusted `merchantId` param.
  * @returns The parsed id, or `null`.
  */
@@ -282,12 +280,11 @@ function parseMerchantId(value: unknown): bigint | null {
  * branded `snap_dialog` confirmation. Branding is DISPLAY-ONLY (doctrine #1):
  * the returned `accepted` flag is a UX courtesy and is NEVER the enforcement
  * point for a payment — the dApp sends the pay tx independently.
- *
  * @param snapProvider - The Snap runtime provider.
  * @param params - The RPC params.
  * @returns `{ ok, merchantId, cached, accepted }`.
  * @throws {SnapError} when `merchantId` or `name` is missing/unusable (a config
- *   error on the branding call itself — not a money path).
+ * error on the branding call itself — not a money path).
  */
 async function handleSetMerchantBranding(
   snapProvider: SnapProvider,
@@ -355,7 +352,6 @@ export { recordReceipt };
 /**
  * Handle `watchMerchant`: the user confirms in a dialog, then the merchant id is watched from the current block.
  * The wallet must be on the watched chain (the wallet's provider answers only for its own network).
- *
  * @param snapProvider - The Snap runtime provider.
  * @param params - The RPC params (`merchantId`, `chainId`).
  * @returns `{ ok, watching }`; `watching` is false if the user declined.
@@ -407,7 +403,6 @@ async function handleWatchMerchant(
 
 /**
  * `onSignature` — the Permit2 insight: shown only for a `PermitTransferFrom` whose spender is the Access0x1 router.
- *
  * @param args - The MetaMask `onSignature` payload.
  * @param args.signature - The signature request.
  * @returns `{ content }`, or `null` for anything else.
@@ -429,7 +424,6 @@ export const onSignature: OnSignatureHandler = async ({ signature }) => {
 
 /**
  * `onNameLookup` — reverse lookup only: names for an address on the four mainnets. A domain input returns `null`.
- *
  * @param args - The lookup request.
  * @returns Resolved names, or `null`.
  */
@@ -454,7 +448,6 @@ export const onNameLookup: OnNameLookupHandler = async (args) => {
 
 /**
  * `onHomePage` — what the Snap does, the networks, and how fees work.
- *
  * @returns The home page content.
  */
 export const onHomePage: OnHomePageHandler = async () => {
@@ -464,7 +457,6 @@ export const onHomePage: OnHomePageHandler = async () => {
 
 /**
  * `onCronjob` — every 10 minutes (see the manifest) check watched merchants for new payments.
- *
  * @param args - The cron request.
  * @param args.request - The job's JSON-RPC request.
  * @returns `null` when the check ran.

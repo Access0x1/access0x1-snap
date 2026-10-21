@@ -18,17 +18,25 @@ export const ETHEREUM = 1;
 export const BASE = 8453;
 export const UNICHAIN = 130;
 export const ARC = 5042;
-export const MAINNET_ROUTER = '0xe92244e3368561faf21648146511DeDE3a475EB5' as const;
+export const MAINNET_ROUTER: `0x${string}` = '0xe92244e3368561faf21648146511DeDE3a475EB5';
 const MAINNETS = [ETHEREUM, BASE, UNICHAIN, ARC];
 /** The mainnet chain ids, in display order. */
 export const MAINNET_IDS: readonly number[] = MAINNETS;
 
-/** The router on a chain Access0x1 is live on, used when no app has configured one; null elsewhere. */
+/**
+ * The router on a chain Access0x1 is live on, used when no app has configured one; null elsewhere.
+ * @param chainId - The numeric chain id.
+ * @returns The router address, or null.
+ */
 export function defaultRouterFor(chainId: number): `0x${string}` | null {
   return MAINNETS.includes(chainId) ? MAINNET_ROUTER : null;
 }
 
-/** Whether the chain is one of the mainnets Access0x1 is live on today (for labels and the home page). */
+/**
+ * Whether the chain is one of the mainnets Access0x1 is live on today (for labels and the home page).
+ * @param chainId - The numeric chain id.
+ * @returns True when the chain is a live mainnet.
+ */
 export function isLiveMainnet(chainId: number): boolean {
   return MAINNETS.includes(chainId);
 }
@@ -46,7 +54,7 @@ export function routerForChain(
   configured: { routerAddress: `0x${string}`; chainIds: number[] } | null,
   chainId: number,
 ): `0x${string}` | null {
-  if (configured && configured.chainIds.includes(chainId)) {
+  if (configured?.chainIds.includes(chainId)) {
     return configured.routerAddress;
   }
   return defaultRouterFor(chainId);
@@ -64,7 +72,6 @@ const CHAIN_LABELS: Record<number, string> = {
 
 /**
  * Resolve a human-readable label for an EVM chain id.
- *
  * @param chainId - Numeric EVM chain id.
  * @returns The chain's name, or `"Unknown Chain (id: <id>)"` for unrecognized ids.
  */
@@ -75,7 +82,6 @@ export function chainLabel(chainId: number): string {
 /**
  * Block-explorer transaction-link base for a chain. Defaults to Arcscan testnet,
  * the chain the live app settles on.
- *
  * @param chainId - Numeric EVM chain id.
  * @returns The explorer base URL ending in `/tx/`.
  */
@@ -100,9 +106,31 @@ export function explorerTxBase(chainId: number): string {
 }
 
 /**
+ * A block-explorer page for an address, on the chains Access0x1 knows. Unknown chains get no link rather than a
+ * link to the wrong explorer.
+ * @param chainId - Numeric EVM chain id.
+ * @param address - The address to open.
+ * @returns The explorer URL, or null when the chain is not one we know.
+ */
+export function explorerAddressUrl(chainId: number, address: `0x${string}`): string | null {
+  if (!(chainId in CHAIN_LABELS)) {
+    return null;
+  }
+  return `${explorerTxBase(chainId).replace(/\/tx\/$/u, '/address/')}${address}`;
+}
+
+/**
+ * The name of a chain's own coin as a person knows it, for "You pay with ...".
+ * @param chainId - Numeric EVM chain id.
+ * @returns "ETH" on the chains that use it, otherwise a neutral "Native coin".
+ */
+export function nativeCoinLabel(chainId: number): string {
+  return [ETHEREUM, BASE, UNICHAIN, BASE_SEPOLIA].includes(chainId) ? 'ETH' : 'Native coin';
+}
+
+/**
  * The router a transaction is addressed to, or null. Only a transaction sent TO the router (an app's configured one, or
  * the address the router has on every chain) gets a payment panel; a look-alike call to another contract gets none.
- *
  * @param to - The transaction's `to`.
  * @param configured - The router an app configured, if any.
  * @param chainId - The numeric chain id.

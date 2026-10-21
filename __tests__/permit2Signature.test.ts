@@ -87,7 +87,7 @@ describe('permit panel', () => {
     expect(text).toContain('USDC');
     expect(text).toContain('25 USDC');
     expect(text).toContain('2030-01-01 00:00 UTC');
-    expect(text).toContain('Only the Access0x1 router can use this permit, once');
+    expect(text).toContain('Only the Access0x1 payment contract can use this, once');
   });
 
   it('shows raw units when the token cannot be read, and flags an unlimited permit', () => {

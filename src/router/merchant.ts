@@ -23,6 +23,9 @@ const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
  * Read the router's `platformFeeBps()`. Best-effort: on any failure returns 0 so
  * the panel degrades to showing the merchant surcharge only (never throws into
  * `onTransaction`). The total on-chain fee is `platformFeeBps + merchant.feeBps`.
+ * @param routerAddress - The router address.
+ * @param provider - EIP-1193 provider.
+ * @returns The platform fee in basis points, or 0.
  */
 async function fetchPlatformFeeBps(
   routerAddress: `0x${string}`,
@@ -52,6 +55,11 @@ async function fetchPlatformFeeBps(
 /**
  * Read the fee rule the router applies to this merchant for this payer (`feeRuleOf`): merchant rule, app group, module
  * class, then global. Best-effort: null on any failure (an older router without `feeRuleOf`), so the caller falls back.
+ * @param routerAddress - The router address.
+ * @param merchantId - The merchant being paid.
+ * @param caller - The paying address.
+ * @param provider - EIP-1193 provider.
+ * @returns The rule's fee and minimum fee, or null.
  */
 async function fetchFeeRule(
   routerAddress: `0x${string}`,
@@ -89,7 +97,6 @@ export type EnsResolver = (
 
 /**
  * Build the default `"Merchant #<id>"` fallback name.
- *
  * @param id - The merchant id.
  * @returns The fallback display name.
  */
@@ -103,14 +110,14 @@ export function fallbackMerchantName(id: bigint): string {
  * Reads `merchants(id)` via `eth_call`, then (optionally) reverse-resolves an
  * ENS label for the payout address. Any error or an unregistered slot yields
  * the `"Merchant #<id>"` fallback so the insight panel always renders.
- *
  * @param id - The merchant id from the decoded call.
  * @param chainId - Numeric EVM chain id (for the ENS resolver).
  * @param routerAddress - The deployed router address (from Snap config; never hardcoded).
  * @param provider - EIP-1193 provider for the `eth_call`.
  * @param ensResolver - Optional ENS reverse resolver.
+ * @param caller - The paying address, used to pick the fee rule.
  * @returns A `MerchantInfo`; on any failure, name is the `"Merchant #<id>"` fallback.
- * @warn Never throws — `onTransaction` relies on this degrading gracefully.
+ * This never throws, because `onTransaction` relies on it degrading gracefully.
  */
 export async function fetchMerchantName(
   id: bigint,
@@ -188,7 +195,6 @@ export async function fetchMerchantName(
  * by checking `keccak256(name) === nameHash`. Returns `null` on any failure or
  * for an unregistered slot, so the branding resolver degrades gracefully. NEVER
  * throws into `onTransaction`.
- *
  * @param id - The merchant id from the decoded call.
  * @param routerAddress - The deployed router address (from Snap config; never hardcoded).
  * @param provider - EIP-1193 provider for the `eth_call`.

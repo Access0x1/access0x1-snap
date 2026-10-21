@@ -36,7 +36,6 @@ export type DecodableTransaction = {
 /**
  * Whether a decoded string contains only printable characters (no ASCII control
  * codes and no DEL). Used to decide whether an order id is human-readable text.
- *
  * @param text - The candidate string.
  * @returns `true` if every codepoint is printable.
  */
@@ -58,7 +57,6 @@ function isPrintable(text: string): boolean {
  * Trailing zero-padding is stripped first. If the remaining bytes are printable
  * UTF-8, the decoded string is returned; otherwise the raw hex is returned so
  * the panel always shows something truthful (never a mojibake string).
- *
  * @param orderId - The 32-byte order id as hex.
  * @returns A human-readable label: the UTF-8 string, or the raw hex.
  */
@@ -84,7 +82,6 @@ export function decodeOrderIdLabel(orderId: `0x${string}`): string {
  *
  * The merchant's price is exact (8 decimals) — this rounds to cents for display
  * only and never alters the on-chain amount.
- *
  * @param usdAmount8 - USD price scaled by 1e8 (e.g. `2900000000n` === $29.00).
  * @returns A string like `"$29.00"`.
  */
@@ -99,11 +96,10 @@ export function formatUsd(usdAmount8: bigint): string {
 /**
  * Decode a pending transaction into a `PaymentSummary` if it targets the
  * router's pay functions.
- *
  * @param tx - The transaction payload from `onTransaction` (only `data` is read).
  * @param chainId - Numeric EVM chain id, used for the chain label.
  * @returns A `PaymentSummary`, or `null` if the calldata is not a recognized
- *          router pay call (including short / malformed calldata).
+ * router pay call (including short / malformed calldata).
  */
 export function parseRouterCall(
   tx: DecodableTransaction,
@@ -116,7 +112,7 @@ export function parseRouterCall(
 
   const selector = slice(data, 0, 4).toLowerCase();
   const known = [PAY_NATIVE_SELECTOR, PAY_TOKEN_SELECTOR, SWAP_AND_PAY_SELECTOR, SWAP_AND_PAY_PERMIT2_SELECTOR, SWAP_AND_PAY_NATIVE_SELECTOR];
-  if (!known.includes(selector as (typeof known)[number])) {
+  if (!known.includes(selector)) {
     return null;
   }
 
@@ -170,19 +166,16 @@ export function parseRouterCall(
     };
   }
 
-  if (decoded.functionName === 'swapAndPayNative') {
-    const [merchantId, settlementToken, usdAmount8, orderId] = decoded.args;
-    return {
-      ...base,
-      merchantId,
-      usdAmount8,
-      token: settlementToken,
-      tokenAmount: 0n,
-      orderId,
-      orderIdLabel: decodeOrderIdLabel(orderId),
-      swap: { payWith: null, maxIn: BigInt(tx.value ?? 0), permit2: false },
-    };
-  }
-
-  return null;
+  // Every other router function returned above, so what is left is the native-coin swap.
+  const [merchantId, settlementToken, usdAmount8, orderId] = decoded.args;
+  return {
+    ...base,
+    merchantId,
+    usdAmount8,
+    token: settlementToken,
+    tokenAmount: 0n,
+    orderId,
+    orderIdLabel: decodeOrderIdLabel(orderId),
+    swap: { payWith: null, maxIn: BigInt(tx.value ?? 0), permit2: false },
+  };
 }

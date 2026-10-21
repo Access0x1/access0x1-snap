@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+
 import { defineConfig } from 'vitest/config';
 
 /**
@@ -8,6 +10,16 @@ import { defineConfig } from 'vitest/config';
  * formatting, panel structure) is tested directly.
  */
 export default defineConfig({
+  plugins: [
+    {
+      // The Snaps build imports an .svg as its text; do the same under test.
+      name: 'svg-as-text',
+      enforce: 'pre',
+      load(id) {
+        return id.endsWith('.svg') ? `export default ${JSON.stringify(readFileSync(id, 'utf8'))};` : null;
+      },
+    },
+  ],
   test: {
     environment: 'node',
     include: ['__tests__/**/*.test.ts'],

@@ -9,9 +9,10 @@
  * It never claims "anonymous" or "untraceable".
  */
 
-import { Box, Button, Heading, Link, Row, Text } from '@metamask/snaps-sdk/jsx';
+import { Box, Button, Heading, Link, Row } from '@metamask/snaps-sdk/jsx';
 import type { JSXElement } from '@metamask/snaps-sdk/jsx';
 
+import { SnapText } from './kit';
 import type { PayoutResult } from '../types';
 
 /** The form field name the "Withdraw Privately" button reports on click. */
@@ -25,7 +26,6 @@ export const PRIVACY_COPY =
 
 /**
  * Format a USD number as `$0.00`.
- *
  * @param balanceUsd - A USD amount as a number.
  * @returns A `$0.00` string.
  */
@@ -35,7 +35,6 @@ function formatBalance(balanceUsd: number): string {
 
 /**
  * Render the payout panel before a withdrawal: balance + the withdraw button.
- *
  * @param balanceUsd - The current payout balance in USD.
  * @returns A Snap JSX element.
  */
@@ -45,9 +44,9 @@ export function renderPayoutPanel(balanceUsd: number): JSXElement {
       Heading({ children: 'Private Payout' }),
       Row({
         label: 'Available',
-        children: Text({ children: formatBalance(balanceUsd) }),
+        children: SnapText({ children: formatBalance(balanceUsd) }),
       }),
-      Text({ children: PRIVACY_COPY }),
+      SnapText({ children: PRIVACY_COPY }),
       Button({
         name: WITHDRAW_BUTTON_NAME,
         variant: 'primary',
@@ -59,7 +58,6 @@ export function renderPayoutPanel(balanceUsd: number): JSXElement {
 
 /**
  * Render the payout result panel: deposit + withdraw explorer links.
- *
  * @param result - The completed {@link PayoutResult}.
  * @returns A Snap JSX element.
  */
@@ -67,7 +65,7 @@ export function renderPayoutResultPanel(result: PayoutResult): JSXElement {
   return Box({
     children: [
       Heading({ children: 'Payout Complete' }),
-      Text({ children: PRIVACY_COPY }),
+      SnapText({ children: PRIVACY_COPY }),
       Row({
         label: 'Deposit',
         children: Link({

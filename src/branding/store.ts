@@ -20,7 +20,6 @@ export const MAX_BRANDING_ENTRIES = 50;
  *
  * Never throws — a missing/empty state degrades to `null` so `onTransaction`
  * can fall through to the next resolution tier.
- *
  * @param snap - The Snap runtime provider.
  * @param merchantId - The merchant id (bigint).
  * @returns The cached {@link MerchantBranding}, or `null`.
@@ -42,7 +41,6 @@ export async function getBranding(
  * cached entries (most-recently-written kept). Requires the Snap to already be
  * configured; if it is not, this is a no-op (the `onTransaction` resolver will
  * simply re-fetch next time).
- *
  * @param snap - The Snap runtime provider.
  * @param branding - The already-sanitized branding to cache.
  */

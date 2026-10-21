@@ -10,29 +10,20 @@
  * it states exactly what is on-chain — amount, token, fee split, merchant, chain.
  */
 
-import {
-  Box,
-  Divider,
-  Heading,
-  Row,
-  Text,
-} from '@metamask/snaps-sdk/jsx';
+import { Address, Box, Divider, Heading, Link, Row, Section } from '@metamask/snaps-sdk/jsx';
 import type { GenericSnapElement, JSXElement } from '@metamask/snaps-sdk/jsx';
 
 import { brandingHeaderChildren } from './brandingPanel';
+import { SnapText } from './kit';
+import { explorerAddressUrl, nativeCoinLabel } from '../router/chains';
 import { formatUsd } from '../router/decode';
-import type {
-  MerchantBranding,
-  MerchantInfo,
-  PaymentSummary,
-} from '../types';
+import type { MerchantBranding, MerchantInfo, PaymentSummary } from '../types';
 
 /** Basis-point denominator (10_000 = 100%). */
 const FEE_DENOMINATOR = 10000n;
 
 /**
  * Truncate an address to `0x1234…cdef` for compact display.
- *
  * @param address - A 20-byte hex address.
  * @returns The truncated form.
  */
@@ -43,7 +34,6 @@ export function truncateAddress(address: `0x${string}`): string {
 /**
  * The label for the token being paid: `"Native"` for a native-coin payment,
  * otherwise the truncated ERC-20 address.
- *
  * @param token - The token address, or `null` for native.
  * @returns A display string for the token.
  */
@@ -57,7 +47,6 @@ export function tokenLabel(token: `0x${string}` | null): string {
  * Display-only: the precise on-chain split is computed in-contract against the
  * live price feed. This mirrors it for the panel using `usdAmount8` so the
  * numbers shown are in the merchant's exact USD units.
- *
  * @param usdAmount8 - Gross price scaled by 1e8.
  * @param feeBps - The merchant surcharge in bps (combined fee shown to the user).
  * @returns The fee and net amounts, both 8-decimal USD.
@@ -73,7 +62,6 @@ export function computeFeeSplit(
 /**
  * The fee split under the router's fee rule: the rule's share of the gross, never below its minimum (and never above
  * the gross), plus the merchant's own surcharge. Display-only, in the merchant's exact USD units.
- *
  * @param usdAmount8 - Gross price scaled by 1e8.
  * @param ruleBps - The rule's fee in bps (feeRuleOf).
  * @param minUsd8 - The rule's minimum fee, scaled by 1e8 (0n: none).
@@ -98,7 +86,6 @@ export function computeRuleFeeSplit(
  * The merchant label shown in the "Merchant" row. Prefers the white-label
  * branding name when present (so the row matches the branded header); otherwise
  * falls back to the on-chain-resolved `MerchantInfo.name` ("Merchant #<id>").
- *
  * @param merchant - The on-chain-resolved merchant info.
  * @param branding - Optional resolved white-label branding.
  * @returns The display label for the Merchant row.
@@ -110,24 +97,100 @@ function merchantRowLabel(
   return branding?.name ?? merchant.name;
 }
 
+/** Token symbols read from the chain, when they could be read; the panel falls back to short addresses. */
+export type TokenSymbols = { payWith?: string; settlement?: string };
+
+/**
+ * The header's top: the branded header when there is branding, otherwise the merchant's own name under a small label.
+ * @param merchant - The resolved merchant.
+ * @param branding - Optional resolved branding.
+ * @returns The header elements.
+ */
+function headerElements(merchant: MerchantInfo, branding?: MerchantBranding): GenericSnapElement[] {
+  if (branding) {
+    return brandingHeaderChildren(branding);
+  }
+  return [SnapText({ children: 'Access0x1 Payment', color: 'muted', size: 'sm' }), Heading({ children: merchant.name })];
+}
+
+/**
+ * The words for one side of a payment: a symbol if we read one, the chain's own coin for native, else a short address.
+ * @param token - The token address, or null for the chain's own coin.
+ * @param chainId - The numeric chain id.
+ * @param symbol - The token symbol, if it was read.
+ * @returns A short label.
+ */
+function coinWords(token: `0x${string}` | null, chainId: number, symbol?: string): string {
+  if (token === null) {
+    return nativeCoinLabel(chainId);
+  }
+  return symbol ?? truncateAddress(token);
+}
+
+/**
+ * Rows for one token. A token's symbol is chosen by whoever made the token, so it is never the only thing shown: an
+ * ERC-20 always gets its address on a row of its own, in the wallet's Address component.
+ * @param label - The row label for the token's name.
+ * @param addressLabel - The row label for its address.
+ * @param token - The token address, or null for the chain's own coin.
+ * @param chainId - The numeric chain id.
+ * @param symbol - The token symbol, if it was read.
+ * @returns One row for the chain's own coin, two for an ERC-20.
+ */
+function tokenRows(
+  label: string,
+  addressLabel: string,
+  token: `0x${string}` | null,
+  chainId: number,
+  symbol?: string,
+): GenericSnapElement[] {
+  if (token === null) {
+    return [Row({ label, children: SnapText({ children: nativeCoinLabel(chainId) }) })];
+  }
+  return [
+    Row({ label, children: SnapText({ children: symbol ?? 'Token' }) }),
+    Row({ label: addressLabel, children: Address({ address: token, truncate: true }) }),
+  ];
+}
+
+/**
+ * The "how it is paid" block for a pay-with-any-token payment: the path in one line, then what happens to leftovers.
+ * @param summary - The decoded payment (must carry `swap`).
+ * @param symbols - Token symbols, if read.
+ * @returns The block's elements.
+ */
+function swapPath(summary: PaymentSummary, symbols?: TokenSymbols): GenericSnapElement[] {
+  const payWith = coinWords(summary.swap?.payWith ?? null, summary.chainId, symbols?.payWith);
+  const paidIn = coinWords(summary.token, summary.chainId, symbols?.settlement);
+  return [
+    SnapText({ children: 'How it is paid', fontWeight: 'bold' }),
+    SnapText({ children: `You pay with ${payWith}  →  Uniswap  →  merchant paid in ${paidIn}` }),
+    SnapText({
+      children: 'Uniswap swaps it inside this same payment. Anything unused comes back to you.',
+      color: 'muted',
+      size: 'sm',
+    }),
+  ];
+}
+
 /**
  * Render the payment insight panel for a decoded router call.
  *
- * When white-label `branding` is supplied (resolved by the D4 ladder), the
- * branded header — logo + "Pay {name}" + description + (when verified) an
- * on-chain badge — is rendered ABOVE the payment insight. Branding is
- * display-only and is purely additive: with no branding this renders exactly the
- * pre-existing panel, so it can never regress the insight surface.
- *
+ * Layout, top to bottom: the header (merchant name with a verified badge when the name matched, then the amount in
+ * large type), a Section with what the merchant receives and the fee, a Divider, then the details (how it is paid,
+ * the payout address with an explorer link, network, order). Branding is display-only and additive: with none, the
+ * header shows the merchant's own name.
  * @param summary - The decoded `PaymentSummary` from `parseRouterCall`.
  * @param merchant - The resolved merchant info from `fetchMerchantName`.
  * @param branding - Optional resolved white-label branding (ADR unit 7).
+ * @param symbols - Optional token symbols read from the chain.
  * @returns A Snap JSX element to return as `{ content }` from `onTransaction`.
  */
 export function renderInsightPanel(
   summary: PaymentSummary,
   merchant: MerchantInfo,
   branding?: MerchantBranding,
+  symbols?: TokenSymbols,
 ): JSXElement {
   // The on-chain fee is platformFeeBps + the merchant surcharge (see _splitFee).
   // Showing only merchant.feeBps understated the fee and overstated the net — a
@@ -139,60 +202,36 @@ export function renderInsightPanel(
     merchant.minFeeUsd8 ?? 0n,
     merchant.feeBps,
   );
-  // Pay with any token: what leaves the wallet, and that Uniswap swaps it into the merchant's coin in this transaction.
-  const swapRows: GenericSnapElement[] = summary.swap
-    ? [
-        Row({
-          label: 'You pay with',
-          children: Text({ children: summary.swap.payWith === null ? 'Native coin' : truncateAddress(summary.swap.payWith) }),
-        }),
-        Row({
-          label: 'Swap',
-          children: Text({ children: 'Uniswap, in this transaction; any unused amount comes back to you' }),
-        }),
-      ]
-    : [];
 
-  // White-label header (logo + "Pay {name}" + description + verified badge),
-  // followed by a divider, ABOVE the payment insight. Omitted with no branding.
-  const header: GenericSnapElement[] = branding
-    ? [...brandingHeaderChildren(branding), Divider({})]
-    : [Heading({ children: 'Access0x1 Payment' })];
+  const explorerUrl = explorerAddressUrl(summary.chainId, merchant.payout);
+
+  const details: GenericSnapElement[] = [
+    ...(summary.swap ? swapPath(summary, symbols) : []),
+    Row({ label: 'Business', children: SnapText({ children: merchantRowLabel(merchant, branding) }) }),
+    Row({ label: 'Paid to', children: Address({ address: merchant.payout, truncate: true }) }),
+    ...(explorerUrl ? [Link({ href: explorerUrl, children: 'View this address on the explorer' })] : []),
+    ...(summary.swap
+      ? [
+          ...tokenRows('You pay with', 'Pay token address', summary.swap.payWith, summary.chainId, symbols?.payWith),
+          ...tokenRows('Merchant paid in', 'Paid token address', summary.token, summary.chainId, symbols?.settlement),
+        ]
+      : tokenRows('Paid in', 'Token address', summary.token, summary.chainId, symbols?.settlement)),
+    Row({ label: 'Network', children: SnapText({ children: summary.chainLabel }) }),
+    Row({ label: 'Order', children: SnapText({ children: summary.orderIdLabel }) }),
+  ];
 
   return Box({
     children: [
-      ...header,
-      Row({
-        label: 'Merchant',
-        children: Text({ children: merchantRowLabel(merchant, branding) }),
-      }),
-      Row({
-        label: 'Amount',
-        children: Text({ children: formatUsd(summary.usdAmount8) }),
-      }),
-      ...swapRows,
-      Row({
-        label: summary.swap ? 'Merchant is paid in' : 'Token',
-        children: Text({ children: tokenLabel(summary.token) }),
+      ...headerElements(merchant, branding),
+      Heading({ size: 'lg', children: formatUsd(summary.usdAmount8) }),
+      Section({
+        children: [
+          Row({ label: 'Merchant receives', children: SnapText({ children: formatUsd(net), fontWeight: 'bold' }) }),
+          Row({ label: 'Fee', children: SnapText({ children: formatUsd(fee) }) }),
+        ],
       }),
       Divider({}),
-      Row({
-        label: 'Platform + merchant fee',
-        children: Text({ children: formatUsd(fee) }),
-      }),
-      Row({
-        label: 'Merchant receives',
-        children: Text({ children: formatUsd(net) }),
-      }),
-      Divider({}),
-      Row({
-        label: 'Order',
-        children: Text({ children: summary.orderIdLabel }),
-      }),
-      Row({
-        label: 'Chain',
-        children: Text({ children: summary.chainLabel }),
-      }),
+      ...details,
     ],
   });
 }

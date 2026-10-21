@@ -1,44 +1,72 @@
 /**
- * The Snap's home page: what it does, the four networks, and how fees work. Shown from the MetaMask Snaps menu.
+ * The Snap's home page, opened from the MetaMask Snaps menu: the logo, what the Snap does in three short lines, the
+ * networks it works on, how fees work, and where to get help.
  */
 
-import { Bold, Box, Divider, Heading, Row, Text } from '@metamask/snaps-sdk/jsx';
+import { Bold, Box, Divider, Heading, Image, Link, Row, Section } from '@metamask/snaps-sdk/jsx';
 import type { JSXElement } from '@metamask/snaps-sdk/jsx';
 
+import { SnapText } from './kit';
+import iconSource from '../../images/icon.svg';
 import { chainLabel, MAINNET_IDS } from '../router/chains';
 
 /**
+ * The logo for the Image component, which takes inline SVG: the icon file with the gaps between tags closed. The file
+ * carries no comments, because the Snap sandbox refuses the character pair that opens one inside a string.
+ */
+export const LOGO_SVG = iconSource.replace(/>\s+</gu, '><').trim();
+
+/** Where people go for help. */
+export const SUPPORT_URL = 'https://t.me/access0x1';
+
+/** What the Snap does, in three short lines. */
+export const INTRO_LINES = [
+  'See who you are paying before you sign.',
+  'See the fee and what the business receives.',
+  'Pay with any token you hold.',
+] as const;
+
+/**
  * Render the home page.
- * @param watching - How many merchants the user is watching for payments.
+ * @param watching - How many businesses the user follows for payment notifications.
  * @returns A Snap UI element.
  */
 export function renderHomePage(watching: number): JSXElement {
   return Box({
     children: [
-      Heading({ children: 'Access0x1 Payments' }),
-      Text({
-        children:
-          'See who you are paying, the fee, and what the business receives, before you sign. Works for payments in any token you hold: the swap happens in the same transaction.',
-      }),
-      Divider({}),
-      Heading({ children: 'Networks' }),
-      ...MAINNET_IDS.map((id) => Row({ label: chainLabel(id), children: Text({ children: 'Live' }) })),
-      Divider({}),
-      Heading({ children: 'How fees work' }),
-      Text({
+      Box({
+        alignment: 'center',
+        crossAlignment: 'center',
         children: [
-          Bold({ children: 'One rule per payment. ' }),
-          'The router applies the merchant\'s own fee rule if it has one, otherwise its app group\'s rule, otherwise the default. The rule can carry a minimum fee. You see the exact fee before you sign.',
+          Image({ src: LOGO_SVG, alt: 'Access0x1', width: 64, height: 64 }),
+          Heading({ children: 'Access0x1 Payments' }),
         ],
       }),
-      Text({
+      ...INTRO_LINES.map((line) => SnapText({ children: line })),
+      Divider({}),
+      Heading({ size: 'sm', children: 'Works on' }),
+      ...MAINNET_IDS.map((id) => SnapText({ children: `•  ${chainLabel(id)}` })),
+      Divider({}),
+      Section({
         children: [
-          Bold({ children: 'The business is paid in the same transaction. ' }),
-          'The router splits your payment and sends the business its share straight away. It holds nothing.',
+          Heading({ size: 'sm', children: 'How fees work' }),
+          SnapText({
+            children: [
+              Bold({ children: 'One fee rule per payment. ' }),
+              'The business\'s own fee rule applies if it has one, otherwise the rule for its app, otherwise the standard rule. A rule can have a minimum. You see the exact fee before you sign.',
+            ],
+          }),
+          SnapText({
+            children: [
+              Bold({ children: 'Your money is never held. ' }),
+              'The business is paid straight away, in the same transaction.',
+            ],
+          }),
         ],
       }),
+      Row({ label: 'Businesses you follow', children: SnapText({ children: String(watching) }) }),
       Divider({}),
-      Row({ label: 'Merchants watched', children: Text({ children: String(watching) }) }),
+      Link({ href: SUPPORT_URL, children: 'Need help? Talk to us on Telegram' }),
     ],
   });
 }

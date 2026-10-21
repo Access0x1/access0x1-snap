@@ -5,13 +5,13 @@
  * degrading gracefully through four tiers — and NEVER throwing into
  * `onTransaction` (the insight panel must always render):
  *
- *   1. branding cached in `snap_manageState` for that merchantId (pushed by the
- *      `setMerchantBranding` RPC — instant, offline);
- *   2. else `fetch()` the public `GET /api/branding/by-merchant/{merchantId}`
- *      endpoint (Snap fetches carry `Origin: null`; the endpoint replies CORS-open);
- *   3. else read `merchants(merchantId).nameHash` on-chain and show the verified
- *      short-hash form;
- *   4. else today's `Merchant #<id>` fallback.
+ * 1. branding cached in `snap_manageState` for that merchantId (pushed by the
+ * `setMerchantBranding` RPC — instant, offline);
+ * 2. else `fetch()` the public `GET /api/branding/by-merchant/{merchantId}`
+ * endpoint (Snap fetches carry `Origin: null`; the endpoint replies CORS-open);
+ * 3. else read `merchants(merchantId).nameHash` on-chain and show the verified
+ * short-hash form;
+ * 4. else today's `Merchant #<id>` fallback.
  *
  * Whenever a readable name is available AND the on-chain `nameHash` matches
  * `keccak256(normalizedName)`, the result is badged `verified` (law #4: we only
@@ -22,6 +22,7 @@
 
 import { keccak256, stringToBytes } from 'viem/utils';
 
+import { JSON_CONTENT_TYPE } from '../constants';
 import {
   DEFAULT_BRAND_COLOR,
   MAX_DESCRIPTION_LEN,
@@ -65,7 +66,6 @@ export type ResolveDeps = {
  * Normalize a display name the same way the hosted app does before hashing, so
  * `keccak256(name)` lines up with the on-chain `nameHash`. Lowercased + single
  * spaced + trimmed (a stable, documented normalization).
- *
  * @param name - The readable display name.
  * @returns The normalized form used for `keccak256`.
  */
@@ -75,7 +75,6 @@ export function normalizeNameForHash(name: string): string {
 
 /**
  * Whether a readable name commits to the given on-chain `nameHash`.
- *
  * @param name - The readable name.
  * @param nameHash - The 32-byte hash read from `merchants(id).nameHash`.
  * @returns `true` if `keccak256(normalize(name)) === nameHash`.
@@ -97,7 +96,6 @@ export function nameMatchesHash(
 
 /**
  * The short-hash display form for the on-chain-only tier: `nameHash#1234…cdef`.
- *
  * @param nameHash - The 32-byte hash.
  * @returns A compact, truthful label derived from the hash.
  */
@@ -108,7 +106,6 @@ export function shortHashLabel(nameHash: `0x${string}`): string {
 /**
  * Coerce an arbitrary JSON value (from the public endpoint, untrusted) into a
  * sanitized `MerchantBranding`, or `null` if it has no usable name.
- *
  * @param merchantId - The merchant id (for the cache key and fallback).
  * @param raw - The untrusted JSON payload.
  * @returns Sanitized branding, or `null`.
@@ -139,7 +136,6 @@ function coerceBranding(
 /**
  * Fetch branding from the public endpoint, sanitized. Times out and degrades to
  * `null` on any error (never throws).
- *
  * @param merchantId - The merchant id.
  * @param deps - The resolver dependencies.
  * @returns Sanitized branding from the endpoint, or `null`.
@@ -157,7 +153,7 @@ export async function fetchBranding(
     : null;
   try {
     const res = await deps.fetchImpl(url, {
-      headers: { accept: 'application/json' },
+      headers: { accept: JSON_CONTENT_TYPE },
       ...(controller ? { signal: controller.signal } : {}),
     });
     if (!res.ok) {
@@ -175,7 +171,6 @@ export async function fetchBranding(
 
 /**
  * The pure `Merchant #<id>` fallback branding (tier 4) — always renderable.
- *
  * @param merchantId - The merchant id.
  * @returns A neutral, never-verified branding record.
  */
@@ -198,7 +193,6 @@ export function fallbackBranding(merchantId: bigint): MerchantBranding {
  * readable name is present and the router is configured, the on-chain `nameHash`
  * is read to (a) set the `verified` badge when it matches, and (b) supply the
  * tier-3 short-hash label when no readable name was found anywhere.
- *
  * @param merchantId - The decoded merchant id.
  * @param deps - The injected dependencies (snap state, provider, fetch, config).
  * @returns The branding to render.

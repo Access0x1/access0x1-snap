@@ -12,7 +12,7 @@
 /**
  * A decoded `payNative` / `payToken` call, ready to render in the insight panel.
  */
-export interface PaymentSummary {
+export type PaymentSummary = {
   /** The merchant the payment is destined for. */
   merchantId: bigint;
   /** Price in USD with 8 decimals (e.g. `2900000000n` === $29.00). */
@@ -42,7 +42,7 @@ export interface PaymentSummary {
 /**
  * A merchant resolved from on-chain state plus an optional ENS label.
  */
-export interface MerchantInfo {
+export type MerchantInfo = {
   /** The merchant id. */
   id: bigint;
   /** ENS label if resolvable, otherwise `"Merchant #<id>"`. */
@@ -66,7 +66,7 @@ export interface MerchantInfo {
  * on-chain transactions (Unlink deposit + withdraw) plus pre-built explorer
  * links so the panel never has to build URLs itself.
  */
-export interface PayoutResult {
+export type PayoutResult = {
   /** The Unlink shield (deposit) transaction hash. */
   depositTx: `0x${string}`;
   /** The Unlink withdraw transaction hash. */
@@ -90,7 +90,7 @@ export interface PayoutResult {
  * `branding/sanitize.ts`). `logoSvg` is an INLINE SVG string only — `Image`
  * never accepts a URL (ADR D5).
  */
-export interface MerchantBranding {
+export type MerchantBranding = {
   /** The on-chain merchant id this branding describes (stringified bigint). */
   merchantId: string;
   /** The readable business name customers see ("Joe's Barbershop"). */
@@ -115,15 +115,14 @@ export interface MerchantBranding {
  * `PaymentSummary` with `bigint` fields stringified for JSON persistence and
  * the `wallet_invokeSnap` return boundary.
  */
-export interface SerializedPaymentSummary
-  extends Omit<PaymentSummary, 'merchantId' | 'usdAmount8' | 'tokenAmount'> {
+export type SerializedPaymentSummary = {
   merchantId: string;
   usdAmount8: string;
   tokenAmount: string;
-}
+} & Omit<PaymentSummary, 'merchantId' | 'usdAmount8' | 'tokenAmount'>
 
 /** A merchant being watched for new `PaymentReceived` events on one chain. */
-export interface Watch {
+export type Watch = {
   /** Numeric EVM chain id. */
   chainId: number;
   /** The merchant id, as a decimal string. */
@@ -137,7 +136,7 @@ export interface Watch {
  * stored via `snap_manageState`. The router address is NEVER hardcoded — it
  * lives here so a redeploy is a config change, not a code change.
  */
-export interface SnapConfigState {
+export type SnapConfigState = {
   /** The deployed `Access0x1Router` address. */
   routerAddress: `0x${string}`;
   /** Chain ids this install recognizes. */
