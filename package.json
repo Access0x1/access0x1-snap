@@ -14,7 +14,8 @@
     "serve": "mm-snap serve",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "npm run build && vitest run --config vitest.e2e.config.ts"
   },
   "dependencies": {
     "@metamask/snaps-sdk": "11.2.0",
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "@metamask/snaps-cli": "8.4.1",
+    "@metamask/snaps-simulation": "4.3.1",
     "typescript": "7.0.2",
     "vitest": "4.1.12"
   },
