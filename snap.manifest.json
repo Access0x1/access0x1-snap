@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "See who you are paying, the fee and what the business receives, before you sign. Pay with any token on Base, Ethereum, Unichain and Arc.",
   "proposedName": "Access0x1 Payments",
   "repository": {
@@ -7,7 +7,7 @@
     "url": "https://github.com/Access0x1/access0x1-snap.git"
   },
   "source": {
-    "shasum": "THFcXLOGAmCYDBrIvDA/PGvnU5hkRUAsjnbcXLOF/FY=",
+    "shasum": "t8n+m9Bi+JQLXO+OXVCgQSHPKOpqu8HWK7udDsGnxaQ=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",

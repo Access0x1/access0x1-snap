@@ -42,18 +42,18 @@ dapp                     ─▶ onRpcRequest  ─▶ configure / setMerchantBran
 - **Transaction insight.** Merchant, amount, token, the fee from the router's `feeRuleOf(merchantId, caller)`
   with its minimum, and what the merchant receives. For pay-with-any-token calls it also shows what you pay
   with and that the swap happens in the same transaction.
-- **Signature insight (0.1.0).** For a Permit2 `PermitTransferFrom` whose spender is the Access0x1 router:
+- **Signature insight (0.1.1).** For a Permit2 `PermitTransferFrom` whose spender is the Access0x1 router:
   which token, the most it can spend, that only the router can use it and only once, and when it expires.
   A permit to any other spender, or any other signature, shows nothing.
-- **Name lookup (0.1.0).** For an address on the four mainnets, the Access0x1 merchant behind it (a readable
+- **Name lookup (0.1.1).** For an address on the four mainnets, the Access0x1 merchant behind it (a readable
   name is shown only if it hashes to the merchant's on-chain `nameHash`, otherwise `Merchant #id`) and, on
   Ethereum, the ENS reverse name (shown only if the name resolves back to the same address and is plain
   ASCII). **Reverse lookup only:** a domain input returns nothing, because MetaMask already resolves ENS names
   and a second resolver here would only add a place for a wrong address to appear in a send flow.
-- **Home page (0.1.0).** What the Snap does, the four networks, and how fees work: one rule per payment
+- **Home page (0.1.1).** What the Snap does, the four networks, and how fees work: one rule per payment
   (the merchant's own, else its app group's, else the default), and the business is paid in the same
   transaction.
-- **Payment notifications (0.1.0).** A dapp calls `watchMerchant({ merchantId, chainId })`; the user confirms
+- **Payment notifications (0.1.1).** A dapp calls `watchMerchant({ merchantId, chainId })`; the user confirms
   in a dialog; every 10 minutes the Snap asks the router for new `PaymentReceived` events for that id and
   raises a MetaMask notification for each. The wallet answers only for the network it is on, so a watch on
   another network waits, keeping its place, until the wallet is on that network again. Checks run while
@@ -98,6 +98,6 @@ local build. The permissions requested, and why each is needed, are listed in [`
 
 ## Status
 
-Version 0.1.0 is prepared for the MetaMask Snaps Directory (see `SUBMISSION.md`); it is not yet published.
+Published on npm as `@access0x1/snap` (0.1.1 is current); submitted to the MetaMask Snaps Directory.
 The package id is `@access0x1/snap`. The Ethereum, Base and Unichain routers were read on-chain for this
 release; test on-device with `npm run serve` against MetaMask Flask.
