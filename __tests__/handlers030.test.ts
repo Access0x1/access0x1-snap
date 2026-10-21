@@ -127,7 +127,7 @@ describe('manifest', () => {
   const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 
   it('has the same version as package.json and an allowlist-safe name', () => {
-    expect(manifest.version).toBe('0.3.0');
+    expect(manifest.version).toBe('0.1.0');
     expect(pkg.version).toBe(manifest.version);
     expect(manifest.proposedName).not.toMatch(/metamask|snap|meta|mask/iu);
   });
