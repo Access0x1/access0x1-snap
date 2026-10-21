@@ -37,7 +37,7 @@ import { type SnapProvider } from '../state';
 import type { MerchantBranding } from '../types';
 
 /** The default public branding API base (overridable via Snap config). */
-export const DEFAULT_BRANDING_API_BASE = 'https://access0x1.click';
+export const DEFAULT_BRANDING_API_BASE = 'https://access0x1.com';
 
 /** How long a `fetch` for branding may take before we give up and degrade. */
 const FETCH_TIMEOUT_MS = 4_000;
