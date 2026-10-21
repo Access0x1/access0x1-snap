@@ -28,6 +28,11 @@ export function defaultRouterFor(chainId: number): `0x${string}` | null {
   return MAINNETS.includes(chainId) ? MAINNET_ROUTER : null;
 }
 
+/** Whether the chain is one of the mainnets Access0x1 is live on today (for labels and the home page). */
+export function isLiveMainnet(chainId: number): boolean {
+  return MAINNETS.includes(chainId);
+}
+
 /** CAIP-2 ids of the mainnets, for the name-lookup permission. */
 export const MAINNET_CAIP2 = MAINNETS.map((id) => `eip155:${id}`);
 
@@ -92,4 +97,28 @@ export function explorerTxBase(chainId: number): string {
     default:
       return 'https://testnet.arcscan.app/tx/';
   }
+}
+
+/**
+ * The router a transaction is addressed to, or null. Only a transaction sent TO the router (an app's configured one, or
+ * the address the router has on every chain) gets a payment panel; a look-alike call to another contract gets none.
+ *
+ * @param to - The transaction's `to`.
+ * @param configured - The router an app configured, if any.
+ * @param chainId - The numeric chain id.
+ * @returns The matching router address, or null.
+ */
+export function routerTarget(
+  to: string | null | undefined,
+  configured: string | null | undefined,
+  chainId: number,
+): `0x${string}` | null {
+  const target = (to ?? '').toLowerCase();
+  if (!target) {
+    return null;
+  }
+  const candidates = [configured, defaultRouterFor(chainId) ?? MAINNET_ROUTER].filter(
+    (a): a is `0x${string}` => typeof a === 'string' && a.length === 42,
+  );
+  return candidates.find((a) => a.toLowerCase() === target) ?? null;
 }

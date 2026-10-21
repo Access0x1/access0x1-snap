@@ -41,7 +41,7 @@ import {
 } from './branding/sanitize';
 import { putBranding } from './branding/store';
 import { lookupAddress } from './names/lookup';
-import { defaultRouterFor, routerForChain } from './router/chains';
+import { routerForChain, routerTarget } from './router/chains';
 import { parseRouterCall } from './router/decode';
 import { fetchMerchantName, type EthProvider } from './router/merchant';
 import {
@@ -114,8 +114,12 @@ export const onTransaction: OnTransactionHandler = async ({
 
   const snapProvider = snap as unknown as SnapProvider;
   const state = await getState(snapProvider);
-  // A configured router wins; on a chain Access0x1 is live on, the one mainnet router is known without configuration.
-  const routerAddress = state?.routerAddress ?? defaultRouterFor(numericChainId);
+  // The panel only speaks for a transaction that goes TO the router: a configured one, or the one address the router
+  // has on every chain. A look-alike call to any other contract gets no panel, so it cannot borrow a trusted one.
+  const routerAddress = routerTarget(transaction.to, state?.routerAddress, numericChainId);
+  if (!routerAddress) {
+    return null;
+  }
 
   const merchant = await fetchMerchantName(
     summary.merchantId,

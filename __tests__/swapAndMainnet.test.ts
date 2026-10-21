@@ -2,7 +2,7 @@ import { encodeFunctionData } from 'viem/utils';
 import { describe, expect, it } from 'vitest';
 
 import { ROUTER_ABI } from '../src/router/abi';
-import { chainLabel, defaultRouterFor, MAINNET_ROUTER } from '../src/router/chains';
+import { chainLabel, defaultRouterFor, MAINNET_ROUTER, routerTarget } from '../src/router/chains';
 import { parseRouterCall } from '../src/router/decode';
 import { computeRuleFeeSplit } from '../src/ui/insightPanel';
 
@@ -48,5 +48,17 @@ describe('fee under the router rule', () => {
     expect(computeRuleFeeSplit(1_000_000_000n, 100, 0n, 400)).toEqual({ fee: 50_000_000n, net: 950_000_000n });
     // Never more than the gross.
     expect(computeRuleFeeSplit(10_000_000n, 100, 30_000_000n, 0).net).toBe(0n);
+  });
+});
+
+describe('the panel only speaks for the router', () => {
+  it('matches the router on any chain (one address everywhere), and a configured one', () => {
+    expect(routerTarget(MAINNET_ROUTER.toLowerCase(), null, 8453)).toBe(MAINNET_ROUTER);
+    expect(routerTarget(MAINNET_ROUTER, null, 999999)).toBe(MAINNET_ROUTER);
+    expect(routerTarget('0x00000000000000000000000000000000000000aa', '0x00000000000000000000000000000000000000AA', 1)).toBe('0x00000000000000000000000000000000000000AA');
+  });
+  it('refuses a look-alike call to any other contract, and a missing to (control)', () => {
+    expect(routerTarget('0x1111111111111111111111111111111111111111', null, 8453)).toBeNull();
+    expect(routerTarget(undefined, MAINNET_ROUTER, 8453)).toBeNull();
   });
 });
