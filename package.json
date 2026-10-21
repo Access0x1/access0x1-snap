@@ -1,0 +1,53 @@
+{
+  "name": "@access0x1/snap",
+  "version": "0.3.0",
+  "description": "Access0x1 \u2014 readable payment insight + private payout inside MetaMask",
+  "license": "SEE LICENSE IN LICENSE",
+  "main": "src/index.ts",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Access0x1/access0x1-snap.git"
+  },
+  "scripts": {
+    "build": "mm-snap build",
+    "serve": "mm-snap serve",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@metamask/snaps-sdk": "11.2.0",
+    "viem": "2.55.1"
+  },
+  "devDependencies": {
+    "@metamask/snaps-cli": "8.4.1",
+    "typescript": "7.0.2",
+    "vitest": "4.1.12"
+  },
+  "files": [
+    "dist",
+    "snap.manifest.json",
+    "images",
+    "README.md",
+    "LICENSE"
+  ],
+  "overrides": {
+    "nanoid": "^3.3.18",
+    "fast-uri": "^3.1.5",
+    "ip-address": "^10.5.0",
+    "js-yaml": "^4.3.1",
+    "minimatch@3": {
+      "brace-expansion": "^1.1.18"
+    },
+    "brace-expansion": "^5.0.9",
+    "uuid": "^11.1.1",
+    "@metamask/number-to-bn": {
+      "bn.js": "^5.2.3"
+    }
+  },
+  "homepage": "https://access0x1.com",
+  "bugs": {
+    "url": "https://t.me/access0x1"
+  }
+}

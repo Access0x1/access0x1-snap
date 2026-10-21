@@ -1,0 +1,49 @@
+{
+  "version": "0.3.0",
+  "description": "See who you are paying, the fee and what the business receives, before you sign. Pay with any token on Base, Ethereum, Unichain and Arc.",
+  "proposedName": "Access0x1 Payments",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Access0x1/access0x1-snap.git"
+  },
+  "source": {
+    "shasum": "X3ncgW11lTrGp0GTzkXnV9Vu7LhL12/mmWGanmtxtIw=",
+    "location": {
+      "npm": {
+        "filePath": "dist/bundle.js",
+        "iconPath": "images/icon.svg",
+        "packageName": "@access0x1/snap",
+        "registry": "https://registry.npmjs.org/"
+      }
+    }
+  },
+  "initialPermissions": {
+    "endowment:transaction-insight": {},
+    "endowment:rpc": {
+      "dapps": true,
+      "snaps": false
+    },
+    "snap_dialog": {},
+    "snap_manageState": {},
+    "endowment:network-access": {},
+    "endowment:ethereum-provider": {},
+    "endowment:signature-insight": {},
+    "endowment:name-lookup": {
+      "chains": ["eip155:1", "eip155:8453", "eip155:130", "eip155:5042"]
+    },
+    "endowment:page-home": {},
+    "endowment:cronjob": {
+      "jobs": [
+        {
+          "expression": "*/10 * * * *",
+          "request": {
+            "method": "checkPayments"
+          }
+        }
+      ]
+    },
+    "snap_notify": {}
+  },
+  "platformVersion": "11.2.0",
+  "manifestVersion": "0.1"
+}
