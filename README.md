@@ -1,6 +1,21 @@
-# Access0x1 MetaMask Snap — readable payment insight
+<div align="center">
 
-**Know what you're paying before you sign.** This [MetaMask Snap](https://docs.metamask.io/snaps/)
+<img src="images/access0x1-mark-animated.svg" width="112" alt="Access0x1, the 0x1 access-plug mark" />
+
+# Access0x1 Payments
+
+**Know who you are paying, the fee, and what the business receives, before you sign.**
+
+A MetaMask Snap for payments on Ethereum, Base, Unichain and Arc.
+
+[access0x1.com](https://access0x1.com) · [Support on Telegram](https://t.me/access0x1) · [`@access0x1/snap` on npm](https://www.npmjs.com/package/@access0x1/snap)
+
+</div>
+
+---
+
+
+This [MetaMask Snap](https://docs.metamask.io/snaps/)
 renders a human-readable insight panel for the `Access0x1Router` contract (the same address, `0xe92244e3368561faf21648146511DeDE3a475EB5`, on Base, Ethereum, Unichain and Arc) payments
 inside the wallet's transaction-confirmation flow. Instead of blind calldata, a customer paying for a
 booking sees **"Pay $29.00 to merchant #7"** — merchant name, the fee and what the business receives —

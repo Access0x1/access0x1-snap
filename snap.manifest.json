@@ -7,7 +7,7 @@
     "url": "https://github.com/Access0x1/access0x1-snap.git"
   },
   "source": {
-    "shasum": "9vsCNY2HWvSVV56vI/y1QdDGifPK7idzuI+L+AWZfC8=",
+    "shasum": "QhCvWtzcpxDNFEl2HDtCPTsLza+WyK1jiqOawy89Jtw=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
